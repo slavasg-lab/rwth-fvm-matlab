@@ -1,0 +1,61 @@
+% Simulationstechnik SS 2013
+% Chair for Computational Analysis of Technical Systems, RWTH Aachen
+% Laboruebung 3
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Solver
+
+display('Starting simulation')
+
+for t=0:dt:tend     % Loop over time
+    % Loop over all inner volumes, boundary volumes remain unchanged
+    for i=2:nny	
+        for j=2:nnx
+            
+            Sum = 0;
+            
+%%%%%%%%%  Y O U R  P A R T  O F  C O D E  S T A R T S  H E R E  %%%%%%%%%%
+            
+            % Calculates sum of fluxes in Eq. (1) over all boundaries of a volume
+            % North
+            Sum = Sum + (Vol(i-1,j).T-Vol(i,j).T)/drN(i,j) * Vol(i,j).dx ;
+            % East
+            Sum = Sum + (Vol(i,j+1).T-Vol(i,j).T)/drE(i,j) * Vol(i,j).dy;
+            % South
+            Sum = Sum + (Vol(i+1,j).T-Vol(i,j).T)/drS(i,j) * Vol(i,j).dx;
+            % West
+			Sum = Sum + (Vol(i,j-1).T-Vol(i,j).T)/drW(i,j) * Vol(i,j).dy;
+
+            % Calculate area of current 'volume': |V_k|
+            V_k = Vol(i,j).dx * Vol(i,j).dy;
+            
+            % Calculate new volume temperature T^n+1
+            VolNew(i,j).T = Vol(i,j).T + lambda*dt/V_k*Sum;
+            
+%%%%%%%%%  Y O U R  P A R T  O F  C O D E  E N D S  H E R E  %%%%%%%%%%%%%%
+
+        end 
+    end
+    
+    % Write out progress
+	if t>0
+        for j=1:(2*size(int2str(tend/dt),2)+4)
+            fprintf('\b');
+        end
+    else
+        fprintf(1,'\t Time step:  ');
+    end
+	fprintf(1,['%' int2str(size(int2str(tend/dt),2)) 'i'],floor(t/dt));
+	fprintf(1,' of %i',floor(tend/dt));
+
+
+    % Backup volume data for next timestep
+    Vol = VolNew; 
+    % Plot solution every 4th step
+    if ( mod(t,dt*4)==0 )
+        visualizer
+    end
+end
+
+fprintf(1,'\n');
+display(['Finished: tend = ' num2str(t) ' s'])
